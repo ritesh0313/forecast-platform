@@ -1,6 +1,6 @@
 # Verification record
 
-Verified on 1 October 2026 using Python 3.12, Node 25.7.0 and an isolated local Postgres 14.18 database. The supplied container/CI targets are Python 3.12, Node 22 and Postgres 18; their execution is not claimed by this record.
+Verified on 1 October 2026 using Python 3.12.14, Node 25.7.0 and an isolated local Postgres 14.18 database. The supplied container/CI targets are Python 3.12, Node 22 and Postgres 18; their execution is not claimed by this record.
 
 | Check | Result | Scope |
 | --- | --- | --- |

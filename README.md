@@ -10,7 +10,7 @@ A modular forecasting system with a reproducible Python workflow, authenticated 
 - Past-only lag, rolling-statistic and known-calendar features; direct multi-horizon supervised targets.
 - Chronological train, tuning, interval-calibration and final test blocks, with crossing target windows purged and train-only scaling.
 - Last-value and seasonal baselines, ridge regression, and a deterministic CPU PyTorch multilayer network. Tuning selects the model; final test data does not select it.
-- MAE, RMSE, sMAPE, MASE and per-horizon errors; empirical prediction intervals with held-out coverage and width. Zero-denominator metrics return JSON null.
+- MAE, RMSE, sMAPE, MASE and per-horizon errors; empirical prediction intervals with held-out coverage and width. Undefined MASE returns JSON null; sMAPE handles zero values.
 - Recorded configuration, seed, data hash, versions, split boundaries, selected-model weights/scalers, atomic artifacts, reloadable inference and idempotent training runs.
 - Signed JWT authentication, trainer/reader permissions, tenant-scoped SQL, bounded JSON inputs, security headers and rate limits.
 - Immutable retraining snapshots, leased/fenced Postgres jobs, bounded retries and stored forecasts/metrics.
