@@ -28,4 +28,4 @@ The synthetic 730-day series selected ridge regression using tuning data. Fixed-
 
 Docker's daemon was not running, so image builds and Compose container execution were not tested. Postgres 18 and Node 22 are configured in CI but that remote workflow has not been executed here. No deployment, load test, identity-provider integration, real-data evaluation or existing-repository merge occurred because no existing repository/data were supplied. The documented scaffold paths are ready for those integration milestones.
 
-![Verified connected dashboard using synthetic observations](dashboard-verified-safari.png)
+![Verified connected dashboard using synthetic observations](dashboard-verified-safari.jpg)
