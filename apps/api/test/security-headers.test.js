@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { securityHeaders } from '../src/app.js';
 
-async function collectHeaders(localHttp) {
+async function collectHeaders(localHttp, requestHeaders = {}) {
   const headers = new Map();
   const response = {
     headersSent: false,
@@ -19,7 +19,7 @@ async function collectHeaders(localHttp) {
   const request = {
     method: 'GET',
     url: '/',
-    headers: {},
+    headers: requestHeaders,
     protocol: 'http',
     secure: false,
   };
@@ -38,7 +38,10 @@ test('local HTTP mode keeps CSP protections while omitting HTTPS-only headers', 
 });
 
 test('default HTTPS mode keeps HTTPS-only headers independent of request metadata', async () => {
-  const headers = await collectHeaders(false);
+  const headers = await collectHeaders(false, {
+    host: 'localhost:3000',
+    'x-forwarded-proto': 'http',
+  });
   assert.match(headers.get('content-security-policy'), /upgrade-insecure-requests/);
   assert.match(headers.get('strict-transport-security'), /max-age=/);
 });
