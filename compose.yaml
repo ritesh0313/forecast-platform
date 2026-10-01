@@ -53,6 +53,9 @@ services:
     environment: &api-environment
       NODE_ENV: production
       PORT: '3000'
+      # The API port is bound to loopback above. Set LOCAL_HTTP=false when
+      # putting the service behind an HTTPS ingress.
+      LOCAL_HTTP: ${LOCAL_HTTP:-true}
       DATABASE_URL: postgresql://forecast:${POSTGRES_PASSWORD:?Run npm run setup first}@db:5432/forecast
       JWT_SECRET: ${JWT_SECRET:?Run npm run setup first}
       MODEL_SERVICE_TOKEN: ${MODEL_SERVICE_TOKEN:?Run npm run setup first}

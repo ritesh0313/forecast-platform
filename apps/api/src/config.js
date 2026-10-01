@@ -12,6 +12,13 @@ function integer(value, fallback, min, max, name) {
   return parsed;
 }
 
+function boolean(value, fallback, name) {
+  if (value === undefined) return fallback;
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  throw new Error(`Invalid ${name}. Expected "true" or "false".`);
+}
+
 export function loadConfig(environment = process.env, { worker = false } = {}) {
   if (!environment.DATABASE_URL) throw new Error('DATABASE_URL is required.');
   const config = {
@@ -20,6 +27,9 @@ export function loadConfig(environment = process.env, { worker = false } = {}) {
     jwtSecret: requireSecret(environment.JWT_SECRET, 'JWT_SECRET'),
     webDist: environment.WEB_DIST,
     production: environment.NODE_ENV === 'production',
+    // This is deliberately independent of NODE_ENV: the production build can
+    // still be served over plain HTTP on a loopback-only development binding.
+    localHttp: boolean(environment.LOCAL_HTTP, false, 'LOCAL_HTTP'),
     leaseSeconds: integer(environment.JOB_LEASE_SECONDS, 90, 15, 3600, 'JOB_LEASE_SECONDS'),
     pollMs: integer(environment.WORKER_POLL_MS, 2000, 100, 60000, 'WORKER_POLL_MS'),
     requestTimeoutMs: integer(

@@ -4,7 +4,7 @@ Express 5 REST API with Postgres storage. Run `npm ci` in this directory. Node 2
 
 ## Configuration
 
-`DATABASE_URL` and `JWT_SECRET` are required. Use an independently generated random secret of at least 32 bytes. No development fallback secret is provided. Server defaults to `PORT=3000`; set `NODE_ENV=production` and `WEB_DIST=/app/apps/web/dist` to serve the built dashboard on the same origin.
+`DATABASE_URL` and `JWT_SECRET` are required. Use an independently generated random secret of at least 32 bytes. No development fallback secret is provided. Server defaults to `PORT=3000`; set `NODE_ENV=production` and `WEB_DIST=/app/apps/web/dist` to serve the built dashboard on the same origin. `LOCAL_HTTP=true` is reserved for the supplied loopback-only development binding; it removes only the HTTPS upgrade and HSTS headers that can make Safari treat local assets as HTTPS. Leave it false behind TLS.
 
 The separate worker requires `MODEL_SERVICE_TOKEN` (independent random secret, at least 32 bytes) and uses `MODEL_SERVICE_URL=http://127.0.0.1:8000`. Optional controls: `JOB_LEASE_SECONDS=90`, `WORKER_POLL_MS=2000`, `MODEL_TIMEOUT_MS=900000`, and `JOB_MAX_ATTEMPTS=3`. The model service token must match the Python service environment.
 

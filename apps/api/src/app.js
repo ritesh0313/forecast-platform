@@ -21,17 +21,32 @@ import {
   publicJobColumns,
 } from './repository.js';
 
+export function securityHeaders(localHttp = false) {
+  return helmet({
+    contentSecurityPolicy: {
+      directives: {
+        // Safari upgrades localhost assets to HTTPS when this directive is
+        // present. Keep it enabled unless the operator explicitly opts into
+        // a loopback-only HTTP deployment.
+        'upgrade-insecure-requests': localHttp ? null : [],
+      },
+    },
+    strictTransportSecurity: localHttp ? false : undefined,
+  });
+}
+
 export function createApp({
   pool,
   jwtSecret,
   webDist,
   production = false,
+  localHttp = false,
   maxAttempts = 3,
   rateLimiting = true,
 }) {
   const app = express();
   app.disable('x-powered-by');
-  app.use(helmet());
+  app.use(securityHeaders(localHttp));
   app.use(express.json({ limit: '2mb', strict: true }));
   // Readiness is public and checks the dependency needed to handle requests.
   app.get('/health', async (_request, response) => {
@@ -51,11 +66,9 @@ export function createApp({
         standardHeaders: 'draft-8',
         legacyHeaders: false,
         handler: (_req, res) =>
-          res
-            .status(429)
-            .json({
-              error: { code: 'rate_limited', message: 'Too many requests. Try again shortly.' },
-            }),
+          res.status(429).json({
+            error: { code: 'rate_limited', message: 'Too many requests. Try again shortly.' },
+          }),
       }),
     );
   api.use(authenticate(jwtSecret));

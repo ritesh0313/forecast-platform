@@ -7,7 +7,7 @@ import {
   observationLimit,
 } from '../src/validation.js';
 import { runWithFreshness } from '../src/repository.js';
-import { requireSecret } from '../src/config.js';
+import { loadConfig, requireSecret } from '../src/config.js';
 
 test('timestamps require real UTC dates rather than parseable local dates', () => {
   for (const value of [
@@ -79,6 +79,16 @@ test('experiment overrides reject unknown fields, split leakage and frequency mi
   assert.throws(() => trainingConfig({ config: { epochs: 501 } }, 'D'), /500/);
   assert.throws(() => observationLimit('2.5'), /integer/);
   assert.throws(() => requireSecret('short', 'JWT_SECRET'), /32 bytes/);
+});
+
+test('LOCAL_HTTP is an explicit strict boolean setting', () => {
+  const environment = {
+    DATABASE_URL: 'postgresql://forecast@localhost/forecast_test',
+    JWT_SECRET: 'test-only-secret-with-more-than-32-bytes',
+  };
+  assert.equal(loadConfig({ ...environment, LOCAL_HTTP: 'true' }).localHttp, true);
+  assert.equal(loadConfig({ ...environment, LOCAL_HTTP: 'false' }).localHttp, false);
+  assert.throws(() => loadConfig({ ...environment, LOCAL_HTTP: 'yes' }), /LOCAL_HTTP/);
 });
 
 test('forecasts expose the immutable data cutoff and stale status', () => {

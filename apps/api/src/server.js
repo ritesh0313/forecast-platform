@@ -9,6 +9,7 @@ const app = createApp({
   jwtSecret: config.jwtSecret,
   webDist: config.webDist,
   production: config.production,
+  localHttp: config.localHttp,
   maxAttempts: config.maxAttempts,
 });
 const server = app.listen(config.port, '0.0.0.0', () =>

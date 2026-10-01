@@ -10,6 +10,7 @@ Verified on 1 October 2026 using Python 3.12.14, Node 25.7.0 and an isolated loc
 | Frontend build | Passed | Strict TypeScript checking and Vite production compilation |
 | End-to-end HTTP smoke | Passed | Unauthorized/reader/cross-tenant denial, series creation, 730-row ingestion, invalid-config rejection, real queued Python training, successful Postgres publication, seven future points, metric retrieval, and unchanged/stale forecasts after new ingestion |
 | Connected dashboard | Passed | Signed synthetic test workspace loaded its series; Start training run created a real job; polling displayed succeeded and loaded the resulting forecast/metrics |
+| Safari localhost recovery | Passed | With the explicit local HTTP setting active, Safari rendered the complete dashboard through `127.0.0.1:3000`; an older cached HSTS policy for `localhost` may require one-time website-data removal or the loopback IP fallback |
 | Visual dashboard QA | Passed | Desktop 1360×960 and phone 390×844; no phone horizontal overflow; charts, uncertainty, metrics, disabled demo writes and visible data provenance; no browser errors/warnings during the checked flow |
 | Dependency advisories | No known findings at check time | API and React production dependencies via npm audit; Python installed environment via pip-audit |
 | Unique-secret setup | Passed | Random 64-character secrets, restrictive file mode, repeat execution preserves existing secrets |
@@ -27,4 +28,4 @@ The synthetic 730-day series selected ridge regression using tuning data. Fixed-
 
 Docker's daemon was not running, so image builds and Compose container execution were not tested. Postgres 18 and Node 22 are configured in CI but that remote workflow has not been executed here. No deployment, load test, identity-provider integration, real-data evaluation or existing-repository merge occurred because no existing repository/data were supplied. The documented scaffold paths are ready for those integration milestones.
 
-![Verified connected dashboard using synthetic observations](dashboard-verified.jpg)
+![Verified connected dashboard using synthetic observations](dashboard-verified-safari.png)
