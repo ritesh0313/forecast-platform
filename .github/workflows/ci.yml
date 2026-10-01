@@ -1,0 +1,76 @@
+name: Verify forecasting platform
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: forecast_test
+          POSTGRES_USER: forecast
+          POSTGRES_PASSWORD: ci-database-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U forecast -d forecast_test"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://forecast:ci-database-only@localhost:5432/forecast_test
+      TEST_DATABASE_URL: postgresql://forecast:ci-database-only@localhost:5432/forecast_test
+      JWT_SECRET: ci-only-auth-secret-at-least-32-bytes-long
+      MODEL_SERVICE_TOKEN: ci-only-model-secret-at-least-32-bytes-long
+      MODEL_SERVICE_URL: http://127.0.0.1:8000
+      ARTIFACT_DIR: /tmp/forecast-ci-artifacts
+      PORT: '3000'
+      WORKER_POLL_MS: '200'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            apps/api/package-lock.json
+            apps/web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: services/model/requirements*.txt
+      - name: Install Node dependencies
+        run: |
+          npm --prefix apps/api ci
+          npm --prefix apps/web ci
+      - name: Install Python dependencies
+        run: pip install --extra-index-url https://download.pytorch.org/whl/cpu -r services/model/requirements-dev.txt
+      - name: Verify Python pipeline
+        working-directory: services/model
+        run: python -m pytest -q
+      - name: Verify API including Postgres
+        run: npm run test:api
+      - name: Verify dashboard and build
+        run: |
+          npm run test:web
+          npm run build:web
+      - name: Verify full retraining flow
+        run: |
+          npm --prefix apps/api run migrate
+          (cd services/model && uvicorn forecast.api:app --host 127.0.0.1 --port 8000) > /tmp/model.log 2>&1 &
+          npm --prefix apps/api start > /tmp/api.log 2>&1 &
+          npm --prefix apps/api run worker > /tmp/worker.log 2>&1 &
+          python - <<'PY'
+          import time, urllib.request
+          for url in ('http://127.0.0.1:8000/health', 'http://127.0.0.1:3000/health'):
+              for attempt in range(60):
+                  try:
+                      urllib.request.urlopen(url, timeout=2)
+                      break
+                  except Exception:
+                      time.sleep(1)
+              else:
+                  raise RuntimeError(f'Service did not become ready: {url}')
+          PY
+          npm run smoke
+      - name: Logs on failure
+        if: failure()
+        run: cat /tmp/model.log /tmp/api.log /tmp/worker.log 2>/dev/null || true

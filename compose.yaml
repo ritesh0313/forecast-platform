@@ -1,0 +1,88 @@
+name: forecast-platform
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: forecast
+      POSTGRES_USER: forecast
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run npm run setup first}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U forecast -d forecast']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: [npm, --prefix, apps/api, run, migrate]
+    environment:
+      DATABASE_URL: postgresql://forecast:${POSTGRES_PASSWORD:?Run npm run setup first}@db:5432/forecast
+      JWT_SECRET: ${JWT_SECRET:?Run npm run setup first}
+      MODEL_SERVICE_TOKEN: ${MODEL_SERVICE_TOKEN:?Run npm run setup first}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: 'no'
+  model:
+    build:
+      context: .
+      dockerfile: services/model/Dockerfile
+    environment:
+      MODEL_SERVICE_TOKEN: ${MODEL_SERVICE_TOKEN:?Run npm run setup first}
+      ARTIFACT_DIR: /artifacts
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      PYTHONHASHSEED: '42'
+    volumes:
+      - model-artifacts:/artifacts
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 20
+    restart: unless-stopped
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment: &api-environment
+      NODE_ENV: production
+      PORT: '3000'
+      DATABASE_URL: postgresql://forecast:${POSTGRES_PASSWORD:?Run npm run setup first}@db:5432/forecast
+      JWT_SECRET: ${JWT_SECRET:?Run npm run setup first}
+      MODEL_SERVICE_TOKEN: ${MODEL_SERVICE_TOKEN:?Run npm run setup first}
+      MODEL_SERVICE_URL: http://model:8000
+      WEB_DIST: /app/apps/web/dist
+    ports:
+      - '127.0.0.1:${PORT:-3000}:3000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      model:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: [npm, --prefix, apps/api, run, worker]
+    environment: *api-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      model:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  postgres-data:
+  model-artifacts:

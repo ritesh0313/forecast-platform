@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forecast-model"
+version = "0.1.0"
+description = "Reproducible direct supervised time-series forecasting service"
+requires-python = ">=3.12,<3.13"
+dependencies = ["numpy==2.2.6", "torch==2.14.1", "fastapi==0.142.2", "uvicorn==0.54.0", "pydantic==2.13.5", "starlette==1.7.0"]
+
+[project.scripts]
+forecast = "forecast.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["forecast*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

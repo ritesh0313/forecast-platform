@@ -1,0 +1,11 @@
+{
+  "frequency": "D",
+  "horizon": 7,
+  "season_length": 7,
+  "lags": 28,
+  "epochs": 80,
+  "seed": 42,
+  "train_fraction": 0.6,
+  "validation_fraction": 0.25,
+  "interval_alpha": 0.1
+}
